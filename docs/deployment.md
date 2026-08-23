@@ -10,17 +10,10 @@ This repository is reserved for the public Oncoorch website only.
 - Deployment platform: Dokploy
 - DNS/proxy/edge TLS: Cloudflare Free
 - Registrar: Squarespace Domains
+- Runtime: Next.js on Node 24
+- Internal container port: `3002`
 
-The admin application must remain in a separate repository and keep using `admin.oncoorch.com`.
-
-## Current known state
-
-As of the current production recovery:
-
-- Cloudflare is authoritative for `oncoorch.com`.
-- `oncoorch.com` and `www.oncoorch.com` are deployed from this repository through Dokploy.
-- `admin.oncoorch.com` reaches Traefik and returns `401 Basic realm="traefik"`, which is consistent with a live protected service.
-- `dokploy.oncoorch.com` resolves to the VPS and can be used for panel recovery while DNS-only.
+The clinical/admin platform must remain in `oncoorch/nicop-platform` and keep using its own domains, including `admin.oncoorch.com`.
 
 ## Required Cloudflare DNS records
 
@@ -31,80 +24,73 @@ Type   Name      Content        Proxy status
 A      @         <VPS_IP>       Proxied
 CNAME  www       oncoorch.com   Proxied
 A      admin     <VPS_IP>       Proxied
-A      dokploy   <VPS_IP>       DNS only during panel recovery
+A      dokploy   <VPS_IP>       Proxied, or DNS only while issuing the first origin certificate
 ```
 
-Do not change `admin.oncoorch.com` unless the existing admin service is being intentionally migrated.
+Do not change `admin.oncoorch.com`, `app.oncoorch.com`, `api.oncoorch.com`, or other application subdomains as part of a website release.
 
 ## Cloudflare SSL/TLS
 
-Start with:
-
-```text
-SSL/TLS mode: Full
-```
-
-Move to:
+Use:
 
 ```text
 SSL/TLS mode: Full (strict)
 ```
 
-only after Dokploy/Traefik has valid origin certificates for all active hostnames.
-
 Do not use `Flexible` for this setup.
 
 ## Dokploy service for this repo
 
-Create a separate Dokploy service for the public website.
+Use a separate Dokploy application for the public website.
 
 ```text
-Name: oncoorch-web
+Name: oncoorch-website
 Provider: GitHub
 Repository: oncoorch/web-oncoorch
 Branch: main
 Build path: /
+Build type: Dockerfile
+Dockerfile: Dockerfile
+Container port: 3002
 Auto Deploy: enabled
 Domains: oncoorch.com, www.oncoorch.com
 ```
 
-Set the internal container port according to the website framework:
+Recommended environment variables:
 
 ```text
-Next.js / Node: 3000
-Static/Nginx: 80
-Astro dev-style adapter: 4321 only if intentionally used in production
+NODE_ENV=production
+PORT=3002
+NEXT_PUBLIC_SITE_URL=https://oncoorch.com
+CONTACT_WEBHOOK_URL=<server-side webhook URL>
 ```
 
-Prefer a production Dockerfile or production build command. Do not run development servers in production.
+`CONTACT_WEBHOOK_URL` is server-only. Never expose it as `NEXT_PUBLIC_CONTACT_WEBHOOK_URL`.
 
 ## Dokploy admin/app service
 
-Keep the admin service separate:
+Keep the platform separate:
 
 ```text
-Domain: admin.oncoorch.com
-Repository: current admin/app repository
+Project: NICOP
+Repository: oncoorch/nicop-platform
 Branch: main
+Compose path: ./infra/docker/docker-compose.contabo.yml
 Auto Deploy: enabled
+Domain: admin.oncoorch.com
 ```
 
 Do not point `admin.oncoorch.com` to this web repository.
 
 ## Safe rollout order
 
-1. Keep the existing admin service unchanged.
-2. Confirm the public VPS IP for Dokploy.
-3. Add `dokploy.oncoorch.com` in Cloudflare as `A <VPS_IP>` with `DNS only`.
-4. Recover Dokploy access using `http://<VPS_IP>:3000`, `http://dokploy.oncoorch.com:3000`, or the configured HTTPS dashboard hostname.
-5. Add the public website code to this repo.
-6. Create or update the public web service in Dokploy from `oncoorch/web-oncoorch`, branch `main`.
-7. Enable Auto Deploy for the service.
-8. Add `oncoorch.com` and `www.oncoorch.com` to the Dokploy service domains.
-9. Change Cloudflare `@` and `www` away from Squarespace and toward `<VPS_IP>`.
-10. Deploy and verify public HTTP responses.
-11. Confirm `admin.oncoorch.com` still behaves as expected.
-12. Switch Cloudflare SSL/TLS to `Full (strict)` after origin certificates are valid.
+1. Keep the existing NICOP compose service unchanged.
+2. Confirm `oncoorch/web-oncoorch` builds from `main`.
+3. Configure the Dokploy website service with container port `3002`.
+4. Add `oncoorch.com` and `www.oncoorch.com` to the website service domains.
+5. Deploy and verify public HTTP responses.
+6. Confirm `admin.oncoorch.com` still behaves as expected.
+7. Confirm Cloudflare SSL/TLS is `Full (strict)`.
 
 ## Verification commands
 
@@ -118,14 +104,8 @@ curl -I -L https://dokploy.oncoorch.com
 Expected after rollout:
 
 ```text
-oncoorch.com       200, or a deliberate 301/302 to the canonical hostname
-www.oncoorch.com   200, or a deliberate 301/302 to the canonical hostname
-admin.oncoorch.com 200, 302 login, or expected 401 Traefik auth
-dokploy.oncoorch.com resolves in DNS
-```
-
-The public website must no longer show:
-
-```text
-Squarespace - Website Expired
+oncoorch.com        200, or a deliberate redirect to the canonical hostname
+www.oncoorch.com    200, or a deliberate redirect to the canonical hostname
+admin.oncoorch.com  200, 302 login, or expected 401 Traefik auth
+dokploy.oncoorch.com resolves and serves the Dokploy dashboard over HTTPS
 ```
