@@ -11,7 +11,7 @@ This repository is reserved for the public Oncoorch website only.
 - DNS/proxy/edge TLS: Cloudflare Free
 - Registrar: Squarespace Domains
 - Runtime: Next.js on Node 24
-- Internal container port: `3002`
+- Internal container port: `80`
 
 The clinical/admin platform must remain in `oncoorch/nicop-platform` and keep using its own domains, including `admin.oncoorch.com`.
 
@@ -51,7 +51,7 @@ Branch: main
 Build path: /
 Build type: Dockerfile
 Dockerfile: Dockerfile
-Container port: 3002
+Container port: 80
 Auto Deploy: enabled
 Domains: oncoorch.com, www.oncoorch.com
 ```
@@ -60,7 +60,7 @@ Recommended environment variables:
 
 ```text
 NODE_ENV=production
-PORT=3002
+PORT=80
 NEXT_PUBLIC_SITE_URL=https://oncoorch.com
 CONTACT_WEBHOOK_URL=<server-side webhook URL>
 ```
@@ -86,7 +86,7 @@ Do not point `admin.oncoorch.com` to this web repository.
 
 1. Keep the existing NICOP compose service unchanged.
 2. Confirm `oncoorch/web-oncoorch` builds from `main`.
-3. Configure the Dokploy website service with container port `3002`.
+3. Confirm the Dokploy website service uses container port `80`.
 4. Add `oncoorch.com` and `www.oncoorch.com` to the website service domains.
 5. Deploy and verify public HTTP responses.
 6. Confirm `admin.oncoorch.com` still behaves as expected.
