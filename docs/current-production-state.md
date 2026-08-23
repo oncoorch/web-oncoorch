@@ -1,64 +1,50 @@
-# Current production recovery state
+# Current production state
 
 Date: 2026-08-23 UTC
 
-## What is currently fixed
+## Public website target
 
-Cloudflare DNS for `oncoorch.com` has been moved away from Squarespace.
-
-The stale Squarespace apex A records were removed:
+The public website belongs in this repository and should deploy through Dokploy from `oncoorch/web-oncoorch`.
 
 ```text
-198.49.23.144
-198.49.23.145
-198.185.159.145
-198.185.159.144
+Dokploy application: oncoorch-website
+Repository: oncoorch/web-oncoorch
+Branch: main
+Build type: Dockerfile
+Dockerfile: Dockerfile
+Internal port: 3002
+Auto deploy: enabled on push
+Domains: oncoorch.com, www.oncoorch.com
 ```
 
-The remaining public DNS shape is:
+## Separate platform target
+
+The clinical/admin platform remains separate.
+
+```text
+Dokploy project: NICOP
+Repository: oncoorch/nicop-platform
+Branch: main
+Compose path: ./infra/docker/docker-compose.contabo.yml
+Auto deploy: enabled on push
+Admin domain: admin.oncoorch.com
+```
+
+## DNS shape
 
 ```text
 A      oncoorch.com          169.58.168.77   Proxied
 CNAME  www.oncoorch.com      oncoorch.com    Proxied
 A      admin.oncoorch.com    169.58.168.77   Proxied
-A      dokploy.oncoorch.com  169.58.168.77   DNS only
+A      dokploy.oncoorch.com  169.58.168.77   Proxied, or DNS only while issuing origin certs
 ```
 
-`admin.oncoorch.com` was not changed.
+Do not move `admin.oncoorch.com` into the website service.
 
-## Current Dokploy web service
+## Dashboard domain
 
-The public website is now deployed by Dokploy from this repository.
+`https://dokploy.oncoorch.com/` should route through Traefik to the Dokploy dashboard service on internal port `3000`. The helper script in the workspace output folder is `outputs/fix-dokploy-dashboard-domain.sh`.
 
-```text
-Dokploy application: oncoorch-website
-Application ID: g7QsKZUYOynTraWJoxC9i
-Docker service: oncoorchwebsite-l4balv
-Repository: oncoorch/web-oncoorch
-Branch: main
-Build type: Dockerfile
-Internal port: 80
-Auto deploy: enabled on push
-Domains: oncoorch.com, www.oncoorch.com
-```
+## Security follow-up
 
-The temporary recovery container `oncoorch-web-recovery` has been removed.
-
-## Verified public state
-
-`oncoorch.com` and `www.oncoorch.com` return `HTTP/2 200` through Cloudflare and serve the Dokploy-deployed public site.
-
-The origin certificate for `oncoorch.com` and `www.oncoorch.com` is now issued by Let's Encrypt.
-
-`admin.oncoorch.com` still returns the expected Traefik Basic Auth response:
-
-```text
-HTTP/2 401
-www-authenticate: Basic realm="traefik"
-```
-
-`dokploy.oncoorch.com` resolves publicly to `169.58.168.77`; the Dokploy panel responds on port `3000`.
-
-## Remaining work
-
-Rotate the temporary access tokens and passwords that were shared during the recovery session.
+Rotate temporary access tokens, API keys, and passwords used during recovery.
