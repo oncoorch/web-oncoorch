@@ -12,10 +12,12 @@ Repository: oncoorch/web-oncoorch
 Branch: main
 Build type: Dockerfile
 Dockerfile: Dockerfile
-Internal port: 3002
+Internal port: 80
 Auto deploy: enabled on push
 Domains: oncoorch.com, www.oncoorch.com
 ```
+
+The container runs Next.js as a non-root user and grants Node `cap_net_bind_service` so it can bind the already configured Dokploy port `80` safely.
 
 ## Separate platform target
 
