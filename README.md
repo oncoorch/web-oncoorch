@@ -4,34 +4,54 @@ Sitio web publico de Oncoorch.
 
 ## Proposito
 
-Este repositorio debe contener solo la web publica de Oncoorch:
+Este repositorio contiene solo la web publica de Oncoorch:
 
 - `https://oncoorch.com`
 - `https://www.oncoorch.com`
 
-La aplicacion/admin debe mantenerse en un repositorio separado y conservar el dominio:
+La aplicacion clinica y administrativa permanece separada en `oncoorch/nicop-platform` y conserva sus dominios propios, incluyendo `https://admin.oncoorch.com`.
 
-- `https://admin.oncoorch.com`
+## Aplicacion
+
+La web es una aplicacion Next.js autonoma.
+
+```text
+Runtime: Node 24
+Framework: Next.js
+Puerto interno: 3002
+Build: Dockerfile en la raiz
+```
 
 ## Ramas
 
-- `main`: produccion. Dokploy debe desplegar automaticamente desde esta rama.
-- `develop`: pruebas o preparacion antes de mezclar a `main`.
+- `main`: produccion. Dokploy despliega automaticamente desde esta rama.
+- `develop`: preparacion antes de mezclar a `main`.
 
 ## Dokploy
 
-Crear un servicio independiente en Dokploy para este repositorio:
+Servicio esperado:
 
-- Repository: `oncoorch/web-oncoorch`
-- Branch: `main`
-- Build path: `/`
-- Auto Deploy: enabled
-- Domains: `oncoorch.com`, `www.oncoorch.com`
+```text
+Repository: oncoorch/web-oncoorch
+Branch: main
+Build path: /
+Build type: Dockerfile
+Dockerfile: Dockerfile
+Container port: 3002
+Auto Deploy: enabled
+Domains: oncoorch.com, www.oncoorch.com
+```
 
-Configurar el puerto interno segun el framework usado por la web. Valores comunes:
+Variables recomendadas:
 
-- Next.js / Node: `3000`
-- Nginx / sitio estatico en contenedor: `80`
+```text
+NODE_ENV=production
+PORT=3002
+NEXT_PUBLIC_SITE_URL=https://oncoorch.com
+CONTACT_WEBHOOK_URL=<server-side webhook URL>
+```
+
+`CONTACT_WEBHOOK_URL` debe configurarse solo en Dokploy como secreto/variable de servidor. No usar `NEXT_PUBLIC_` para ese valor.
 
 ## Cloudflare
 
@@ -43,7 +63,7 @@ Registros esperados:
 A      @       <VPS_IP>        Proxied
 CNAME  www     oncoorch.com    Proxied
 A      admin   <VPS_IP>        Proxied
-A      dokploy <VPS_IP>        DNS only mientras se recupera/accede al panel
+A      dokploy <VPS_IP>        Proxied o DNS only durante emision de certificado
 ```
 
-Usar SSL/TLS `Full` al inicio. Cambiar a `Full (strict)` solo cuando Dokploy/Traefik tenga certificados validos en el origen para todos los hostnames.
+Usar SSL/TLS `Full (strict)` cuando Traefik/Dokploy tenga certificados validos en el origen para todos los hostnames.
