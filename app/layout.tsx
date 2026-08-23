@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
+import { ChatwootWidget } from '../components/ChatwootWidget';
 import './globals.css';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://oncoorch.com';
@@ -26,7 +27,10 @@ export const viewport: Viewport = { colorScheme: 'dark', themeColor: '#061f4a' }
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="es-EC" data-nicop-theme="dark">
-      <body>{children}</body>
+      <body>
+        {children}
+        <ChatwootWidget />
+      </body>
     </html>
   );
 }
