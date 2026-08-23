@@ -15,12 +15,12 @@ The admin application must remain in a separate repository and keep using `admin
 
 ## Current known state
 
-As of the last public diagnosis:
+As of the current production recovery:
 
 - Cloudflare is authoritative for `oncoorch.com`.
-- `oncoorch.com` and `www.oncoorch.com` reach Cloudflare but still show `Squarespace - Website Expired`.
+- `oncoorch.com` and `www.oncoorch.com` are deployed from this repository through Dokploy.
 - `admin.oncoorch.com` reaches Traefik and returns `401 Basic realm="traefik"`, which is consistent with a live protected service.
-- `dokploy.oncoorch.com` does not resolve yet.
+- `dokploy.oncoorch.com` resolves to the VPS and can be used for panel recovery while DNS-only.
 
 ## Required Cloudflare DNS records
 
@@ -98,7 +98,7 @@ Do not point `admin.oncoorch.com` to this web repository.
 3. Add `dokploy.oncoorch.com` in Cloudflare as `A <VPS_IP>` with `DNS only`.
 4. Recover Dokploy access using `http://<VPS_IP>:3000`, `http://dokploy.oncoorch.com:3000`, or the configured HTTPS dashboard hostname.
 5. Add the public website code to this repo.
-6. Create the `oncoorch-web` service in Dokploy from `oncoorch/web-oncoorch`, branch `main`.
+6. Create or update the public web service in Dokploy from `oncoorch/web-oncoorch`, branch `main`.
 7. Enable Auto Deploy for the service.
 8. Add `oncoorch.com` and `www.oncoorch.com` to the Dokploy service domains.
 9. Change Cloudflare `@` and `www` away from Squarespace and toward `<VPS_IP>`.

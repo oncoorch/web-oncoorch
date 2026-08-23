@@ -26,29 +26,27 @@ A      dokploy.oncoorch.com  169.58.168.77   DNS only
 
 `admin.oncoorch.com` was not changed.
 
-## Current temporary web container
+## Current Dokploy web service
 
-A temporary recovery container is running directly on the VPS to prevent `oncoorch.com` and `www.oncoorch.com` from showing the expired Squarespace page or Cloudflare `526`.
+The public website is now deployed by Dokploy from this repository.
 
 ```text
-Container: oncoorch-web-recovery
-Image: nginx:1.27-alpine
-Network: dokploy-network
-Content path on VPS: /opt/oncoorch-recovery-web
+Dokploy application: oncoorch-website
+Application ID: g7QsKZUYOynTraWJoxC9i
+Docker service: oncoorchwebsite-l4balv
+Repository: oncoorch/web-oncoorch
+Branch: main
+Build type: Dockerfile
+Internal port: 80
+Auto deploy: enabled on push
 Domains: oncoorch.com, www.oncoorch.com
 ```
 
-This container is not the final website deployment. It should be removed after the real public website is deployed through Dokploy from this repository.
-
-Removal command after the final Dokploy web service is live:
-
-```bash
-docker rm -f oncoorch-web-recovery
-```
+The temporary recovery container `oncoorch-web-recovery` has been removed.
 
 ## Verified public state
 
-`oncoorch.com` and `www.oncoorch.com` return `HTTP/2 200` through Cloudflare.
+`oncoorch.com` and `www.oncoorch.com` return `HTTP/2 200` through Cloudflare and serve the Dokploy-deployed public site.
 
 The origin certificate for `oncoorch.com` and `www.oncoorch.com` is now issued by Let's Encrypt.
 
@@ -63,13 +61,4 @@ www-authenticate: Basic realm="traefik"
 
 ## Remaining work
 
-The final production web service still needs to be created in Dokploy:
-
-```text
-Repository: oncoorch/web-oncoorch
-Branch: main
-Auto Deploy: enabled
-Domains: oncoorch.com, www.oncoorch.com
-```
-
-Once the real service is deployed and healthy, remove `oncoorch-web-recovery`.
+Rotate the temporary access tokens and passwords that were shared during the recovery session.
