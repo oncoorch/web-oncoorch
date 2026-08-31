@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   description: 'Plataforma inteligente que conecta informacion, decisiones y equipos a lo largo del continuo oncologico.',
   applicationName: 'Onco-Orch',
   alternates: { canonical: '/' },
+  icons: { icon: '/icon.svg' },
   openGraph: {
     title: 'Onco-Orch | Cada paso debe estar conectado',
     description: 'Orquestacion clinica inteligente para una atencion oncologica continua, segura y centrada en la persona.',
